@@ -10,7 +10,7 @@ import logging
 from collections import defaultdict
 from random import shuffle
 
-from data import data_utils
+import data_utils
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--input', type=str, help='Input file path')
@@ -30,6 +30,7 @@ def create_vocab(path, vocab_size):
 
     count_pairs = sorted(counter.items(), key=lambda x: (-x[1], x[0]))[:vocab_size]
     words = [w for (w, v) in count_pairs]
+    print(len(count_pairs))
     print(len(counter), count_pairs[vocab_size - 1])
     w2idx = dict(zip(words, range(len(words))))
     idx2w = dict(zip(range(len(words)), words))
@@ -85,6 +86,6 @@ def create_corpus(input_path, output_path, vocab):
 
 w2idx, idx2w = create_vocab(args.input, args.vocab)
 
-#convert_text(args.input, args.output, w2idx)
+convert_text(args.input, args.output, w2idx)
 create_corpus(args.input, args.output_dir, w2idx)
 

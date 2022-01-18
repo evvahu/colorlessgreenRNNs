@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser(parents=[lm_parser],
                                  description="Basic training and evaluation for RNN LM")
 
 args = parser.parse_args()
-
+# comment
 logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler(),
                                                   logging.FileHandler(args.log)])
 logging.info(args)
