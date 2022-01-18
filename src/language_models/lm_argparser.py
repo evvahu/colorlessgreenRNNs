@@ -21,6 +21,8 @@ lm_parser.add_argument('--nhid', type=int, default=200,
                        help='number of hidden units per layer')
 lm_parser.add_argument('--nlayers', type=int, default=2,
                        help='number of layers')
+lm_parser.add_argument('--type_encoder', type=str, default = '', help= 'type fasttext if you want to use fasttext embs')
+lm_parser.add_argument('--path_to_model', type=str, default='Surprisal_LMs/data/FastText/cc.hi.300.bin', help = 'path to fasttext model')
 lm_parser.add_argument('--dropout', type=float, default=0.2,
                        help='dropout applied to layers (0 = no dropout)')
 lm_parser.add_argument('--tied', action='store_true',

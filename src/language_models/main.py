@@ -62,7 +62,7 @@ criterion = nn.CrossEntropyLoss()
 
 logging.info("Building the model")
 
-model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid, args.nlayers, args.dropout, args.tied)
+model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid, args.nlayers, args.type_encoder, args.path_to_model, args.dropout, args.tied)
 if args.cuda:
     model.cuda()
 
@@ -113,6 +113,7 @@ def train():
         loss.backward()
 
         # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
+        print('model paramters', model.parameters())
         torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip)
         for p in model.parameters():
             p.data.add_(-lr, p.grad.data)

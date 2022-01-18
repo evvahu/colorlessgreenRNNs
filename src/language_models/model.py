@@ -7,7 +7,7 @@
 
 import torch.nn as nn
 import torch.utils.data.dataloader
-
+import fasttext
 
 class RNNModel(nn.Module):
     """Container module with an encoder, a recurrent module, and a decoder.
@@ -15,10 +15,15 @@ class RNNModel(nn.Module):
         nip: embedding size
     """
 
-    def __init__(self, rnn_type, ntoken, ninp, nhid, nlayers, dropout=0.5, tie_weights=False):
+    def __init__(self, rnn_type, ntoken, ninp, nhid, nlayers, type_encoder ='', path_to_model = '',dropout=0.5, tie_weights=False):
         super(RNNModel, self).__init__()
         self.drop = nn.Dropout(dropout)
-        self.encoder = nn.Embedding(ntoken, ninp)
+        self.type_encoder = type_encoder
+        if self.type_encoder == 'fasttext':
+            print(path_to_model)
+            self.encoder = fasttext.load_model(path_to_model)
+        else:
+            self.encoder = nn.Embedding(ntoken, ninp)
         if rnn_type in ['LSTM', 'GRU']:
             self.rnn = getattr(nn, rnn_type)(ninp, nhid, nlayers, dropout=dropout)
         else:
@@ -49,7 +54,8 @@ class RNNModel(nn.Module):
 
     def init_weights(self):
         initrange = 0.1
-        self.encoder.weight.data.uniform_(-initrange, initrange)
+        if not self.type_encoder == 'fasttext':
+            self.encoder.weight.data.uniform_(-initrange, initrange)
         self.decoder.bias.data.fill_(0)
         self.decoder.weight.data.uniform_(-initrange, initrange)
 
