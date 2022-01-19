@@ -7,6 +7,8 @@
 
 
 import torch
+import numpy as np
+
 
 def repackage_hidden(h):
     """Detaches hidden states from their history."""
@@ -34,3 +36,15 @@ def batchify(data, bsz, cuda):
     if cuda:
         data = data.cuda()
     return data
+
+def ids_to_embs(data, idtow, ft_model, embsize=300):
+    words = torch.empty(size=(data.size(0), data.size(1), embsize))
+    #words = np.empty((data.size(0), data.size(1)), dtype=float)
+    #data_flat = data.view(-1, 1)
+    for i in range(data.size(0)):
+        for j in range(data.size(1)):
+            #row = data.select(0, i)
+            #id = row[j]
+            word = idtow[data[i][j].item()]
+            words[i, j] = torch.from_numpy(ft_model.get_word_vector(word))
+    return words

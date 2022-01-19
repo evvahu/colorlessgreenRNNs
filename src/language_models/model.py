@@ -19,10 +19,11 @@ class RNNModel(nn.Module):
         super(RNNModel, self).__init__()
         self.drop = nn.Dropout(dropout)
         self.type_encoder = type_encoder
-        if self.type_encoder == 'fasttext':
-            print(path_to_model)
-            self.encoder = fasttext.load_model(path_to_model)
-        else:
+        #if self.type_encoder == 'fasttext':
+        #    print(path_to_model)
+        #    self.encoder = fasttext.load_model(path_to_model)
+        #else:
+        if self.type_encoder != 'fasttext':
             self.encoder = nn.Embedding(ntoken, ninp)
         if rnn_type in ['LSTM', 'GRU']:
             self.rnn = getattr(nn, rnn_type)(ninp, nhid, nlayers, dropout=dropout)
@@ -54,18 +55,23 @@ class RNNModel(nn.Module):
 
     def init_weights(self):
         initrange = 0.1
-        if not self.type_encoder == 'fasttext':
+        if self.type_encoder != 'fasttext':
             self.encoder.weight.data.uniform_(-initrange, initrange)
         self.decoder.bias.data.fill_(0)
         self.decoder.weight.data.uniform_(-initrange, initrange)
 
     def forward(self, input, hidden):
-        emb = self.drop(self.encoder(input))
+        if self.type_encoder == 'fasttext':
+            emb = self.drop(input)
+        else:
+            emb = self.drop(self.encoder(input))
         output, hidden = self.rnn(emb, hidden)
         output = self.drop(output)
+        #print(output.size())
+        #print(output.view(output.size(0)*output.size(1), output.size(2)).size())
         #print(output)
         decoded = self.decoder(output.view(output.size(0)*output.size(1), output.size(2)))
-
+        #print(decoded.view(output.size(0), output.size(1), decoded.size(1)).size())
         return decoded.view(output.size(0), output.size(1), decoded.size(1)), hidden
 
     def init_hidden(self, bsz):

@@ -9,14 +9,14 @@ import argparse
 import logging
 import math
 import time
-
+import fasttext
 import torch
 import torch.nn as nn
 
 from dictionary_corpus import Corpus
 import model
 from lm_argparser import lm_parser
-from utils import repackage_hidden, get_batch, batchify
+from utils import repackage_hidden, get_batch, batchify, ids_to_embs
 
 parser = argparse.ArgumentParser(parents=[lm_parser],
                                  description="Basic training and evaluation for RNN LM")
@@ -41,7 +41,7 @@ if torch.cuda.is_available():
 
 logging.info("Loading data")
 start = time.time()
-corpus = Corpus(args.data)
+corpus = Corpus(args.data, encoder_type=args.type_encoder)
 logging.info("( %.2f )" % (time.time() - start))
 ntokens = len(corpus.dictionary)
 logging.info("Vocab size %d", ntokens)
@@ -66,7 +66,8 @@ model = model.RNNModel(args.model, ntokens, args.emsize, args.nhid, args.nlayers
 if args.cuda:
     model.cuda()
 
-
+if args.type_encoder == 'fasttext':
+    f_model = fasttext.load_model(args.path_to_model)
 
 ###############################################################################
 # Training code
@@ -82,6 +83,8 @@ def evaluate(data_source):
     with torch.no_grad():
         for i in range(0, data_source.size(0) - 1, args.bptt):
             data, targets = get_batch(data_source, i, args.bptt)
+            if args.type_encoder == 'fasttext':
+                data = ids_to_embs(data, corpus.dictionary.idx2word, f_model)
             #> output has size seq_length x batch_size x vocab_size
             output, hidden = model(data, hidden)
             #> output_flat has size num_targets x vocab_size (batches are stacked together)
@@ -104,16 +107,25 @@ def train():
 
     for batch, i in enumerate(range(0, train_data.size(0) - 1, args.bptt)):
         data, targets = get_batch(train_data, i, args.bptt)
+        print('size', type(data), data.size())
+        if args.type_encoder == 'fasttext':
+            data = ids_to_embs(data, corpus.dictionary.idx2word, f_model)
+            #print(data)
+            #data = torch.from_numpy(data)
+            print(data.size())
+        #include it here: FT  
         # truncated BPP
         hidden = repackage_hidden(hidden)
         model.zero_grad()
         output, hidden = model(data, hidden)
-
+        #print(targets.size())
+        #print(output.view(-1, ntokens).size())
         loss = criterion(output.view(-1, ntokens), targets)
         loss.backward()
-
         # `clip_grad_norm` helps prevent the exploding gradient problem in RNNs / LSTMs.
-        print('model paramters', model.parameters())
+        #for name, param in model.named_parameters():
+            #if param.requires_grad:
+                #print(name)#, param.data)
         torch.nn.utils.clip_grad_norm_(model.parameters(), args.clip)
         for p in model.parameters():
             p.data.add_(-lr, p.grad.data)
