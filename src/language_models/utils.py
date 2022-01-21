@@ -38,7 +38,11 @@ def batchify(data, bsz, cuda):
     return data
 
 def ids_to_embs(data, idtow, ft_model, embsize=300):
-    words = torch.empty(size=(data.size(0), data.size(1), embsize))
+    if torch.cuda.is_available():
+        words = torch.empty(size=(data.size(0), data.size(1), embsize), device='cuda:0')
+    else:
+        words = torch.empty(size=(data.size(0), data.size(1), embsize)) 
+    #words.to('cuda:0')
     #words = np.empty((data.size(0), data.size(1)), dtype=float)
     #data_flat = data.view(-1, 1)
     for i in range(data.size(0)):
@@ -47,4 +51,5 @@ def ids_to_embs(data, idtow, ft_model, embsize=300):
             #id = row[j]
             word = idtow[data[i][j].item()]
             words[i, j] = torch.from_numpy(ft_model.get_word_vector(word))
+    print('the shape of words', words.shape)
     return words

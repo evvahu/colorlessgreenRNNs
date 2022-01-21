@@ -52,7 +52,7 @@ train_data = batchify(corpus.train, args.batch_size, args.cuda)
 val_data = batchify(corpus.valid, eval_batch_size, args.cuda)
 test_data = batchify(corpus.test, eval_batch_size, args.cuda)
 
-
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 criterion = nn.CrossEntropyLoss()
 
@@ -85,6 +85,9 @@ def evaluate(data_source):
             data, targets = get_batch(data_source, i, args.bptt)
             if args.type_encoder == 'fasttext':
                 data = ids_to_embs(data, corpus.dictionary.idx2word, f_model)
+                #if torch.cuda.is_available():
+                #data.to(device)
+                #print('is data on cuda in evaluate?', data.is_cuda)
             #> output has size seq_length x batch_size x vocab_size
             output, hidden = model(data, hidden)
             #> output_flat has size num_targets x vocab_size (batches are stacked together)
@@ -107,13 +110,14 @@ def train():
 
     for batch, i in enumerate(range(0, train_data.size(0) - 1, args.bptt)):
         data, targets = get_batch(train_data, i, args.bptt)
-        print('size', type(data), data.size())
+        #print('size', type(data), data.size())
         if args.type_encoder == 'fasttext':
             data = ids_to_embs(data, corpus.dictionary.idx2word, f_model)
-            #print(data)
-            #data = torch.from_numpy(data)
-            print(data.size())
-        #include it here: FT  
+            #if torch.cuda.is_available():
+            #data.to(device)
+            #print('devicyyy', device)
+            #print('is data on cuda in train?', data.is_cuda)
+        
         # truncated BPP
         hidden = repackage_hidden(hidden)
         model.zero_grad()

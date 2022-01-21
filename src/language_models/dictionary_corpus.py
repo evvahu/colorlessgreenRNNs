@@ -9,6 +9,7 @@ import os
 import torch
 from collections import defaultdict
 import logging
+import numpy as np
 
 class Dictionary(object):
     def __init__(self, path):
@@ -46,13 +47,38 @@ class Dictionary(object):
 
 
 class Corpus(object):
-    def __init__(self, path):
+    def __init__(self, path, encoder_type):
         self.dictionary = Dictionary(path)
-        self.train = tokenize(self.dictionary, os.path.join(path, 'train.txt'))
-        self.valid = tokenize(self.dictionary, os.path.join(path, 'valid.txt'))
-        self.test = tokenize(self.dictionary, os.path.join(path, 'test.txt'))
+        self.encoder_type = encoder_type
+        if self.encoder_type == 'loopiloop':
+            self.train = tokenize_ft(os.path.join(path, 'train.txt'))
+            self.valid = tokenize_ft(os.path.join(path, 'valid.txt')) 
+            self.test = tokenize_ft(os.path.join(path, 'test.txt'))
+        else:
+            self.train = tokenize(self.dictionary, os.path.join(path, 'train.txt'))
+            self.valid = tokenize(self.dictionary, os.path.join(path, 'valid.txt'))
+            self.test = tokenize(self.dictionary, os.path.join(path, 'test.txt'))
 
-
+def tokenize_ft(path):
+    assert os.path.exists(path)
+    ntokens = 0
+    with open(path, 'r', encoding='utf8') as f:
+        for line in f:
+            words = line.split()
+            ntokens += len(words)
+    with open(path, 'r', encoding='utf8') as f:
+        ids = []
+        token = 0
+        for l in f:
+            words = l.split()
+            for w in words:
+                ids.append(w)
+                #print('w', w)
+                #ids[token] = w 
+                #print('ids', ids)
+                #token +=1
+    return ids
+            
 def tokenize(dictionary, path):
     """Tokenizes a text file for training or testing to a sequence of indices format
        We assume that training and test data has <eos> symbols """
